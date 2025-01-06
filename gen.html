@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adobe Express Image Resizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        input[type="file"], input[type="number"] {
+            padding: 10px;
+            font-size: 16px;
+        }
+        .resize-btn {
+            background-color: #0061f2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .resize-btn:hover {
+            background-color: #004bbf;
+        }
+        #image-container {
+            margin-top: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+        }
+        #image-details {
+            margin-top: 20px;
+        }
+        #resize-container {
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Adobe Express Image Resizer</h1>
+        <p>Upload an image and resize it using Adobe Express</p>
+
+        <input type="file" id="image-upload" accept="image/*">
+        <div id="image-details"></div>
+
+        <div id="resize-container">
+            <h3>Resize Image</h3>
+            <label for="resize-width">Width (px):</label>
+            <input type="number" id="resize-width" placeholder="Width in pixels"><br>
+            <label for="resize-height">Height (px):</label>
+            <input type="number" id="resize-height" placeholder="Height in pixels"><br>
+            <button class="resize-btn" id="resize-btn">Resize Now</button>
+        </div>
+
+        <div id="image-container">
+            <img id="uploaded-image" src="" alt="" style="display:none;">
+        </div>
+    </div>
+
+    <script src="https://cc-embed.adobe.com/sdk/v4/CCEverywhere.js"></script>
+    <script>
+        const apiKey = '69caa06b75dc4c3a877ef8f668631667'; // Replace with your actual Adobe API Key
+
+        const imageUpload = document.getElementById('image-upload');
+        const resizeBtn = document.getElementById('resize-btn');
+        const uploadedImage = document.getElementById('uploaded-image');
+        const imageContainer = document.getElementById('image-container');
+        const imageDetails = document.getElementById('image-details');
+        const resizeContainer = document.getElementById('resize-container');
+        const resizeWidthInput = document.getElementById('resize-width');
+        const resizeHeightInput = document.getElementById('resize-height');
+
+        let uploadedFile;
+
+        // Handle image upload
+        imageUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            uploadedFile = file;
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedImage.src = e.target.result;
+                    uploadedImage.style.display = 'block';
+
+                    // Display image details
+                    const img = new Image();
+                    img.onload = () => {
+                        imageDetails.innerHTML = `
+                            <p><strong>File Name:</strong> ${file.name}</p>
+                            <p><strong>File Size:</strong> ${(file.size / 1024).toFixed(2)} KB</p>
+                            <p><strong>Resolution:</strong> ${img.width} x ${img.height} px</p>
+                        `;
+                        resizeContainer.style.display = 'block'; // Show resize options
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Resize image when button is clicked
+        resizeBtn.addEventListener('click', async () => {
+            const newWidth = parseInt(resizeWidthInput.value);
+            const newHeight = parseInt(resizeHeightInput.value);
+
+            if (!newWidth || !newHeight) {
+                alert('Please enter valid dimensions for resizing.');
+                return;
+            }
+
+            // Initialize the Adobe Express SDK for resizing
+            const hostInfo = {
+                clientId: apiKey,
+                appName: "Image Resizer App",
+            };
+
+            const configParams = {
+                locale: "en_US",
+                actions: ["resize"]  // Only enable resize action
+            };
+
+            const { editor } = await window.CCEverywhere.initialize(hostInfo, configParams);
+
+            editor.create({
+                image: uploadedImage.src,
+                resize: { 
+                    width: newWidth,  // Set width to user input
+                    height: newHeight  // Set height to user input
+                },
+            });
+
+            alert('Resizing started...');
+        });
+    </script>
+
+</body>
+</html>
